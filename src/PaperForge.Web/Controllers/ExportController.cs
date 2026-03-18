@@ -20,7 +20,8 @@ public class ExportController : Controller
         [FromQuery] string font = "Times New Roman",
         [FromQuery] int fontSize = 12,
         [FromQuery] double lineSpacing = 2.0,
-        [FromQuery] bool titlePage = true)
+        [FromQuery] bool titlePage = true,
+        [FromQuery] bool studentPaper = true)
     {
         var opts = new ExportOptionsDto
         {
@@ -29,6 +30,7 @@ public class ExportController : Controller
             FontSize = fontSize,
             LineSpacing = lineSpacing,
             IncludeTitlePage = titlePage,
+            IsStudentPaper = studentPaper,
         };
 
         try

@@ -51,15 +51,11 @@ public class ExportService : IExportService
     }
 
     // ═══════════════════════════════════════════════════════
-    // PDF EXPORT - APA 7 Student Paper Format
+    // PDF EXPORT - APA 7 (Student & Professional formats)
     // ═══════════════════════════════════════════════════════
-    // Title page: centered, bold title 3-4 lines down, then
-    //   author name, department/institution, course, instructor, date
-    // No running head for student papers (APA 7 change)
-    // Page numbers top-right on every page
-    // Body: title repeated bold+centered on page 2, then text
-    // Section headings: Level 1 = centered+bold, Level 2 = left+bold
-    // References: new page, "References" centered+bold, hanging indent
+    // Student: No running head, title page with course/instructor/date
+    // Professional: Running head (shortened title ALL CAPS), author note
+    // Both: Page numbers top-right, 1" margins, double-spaced, 12pt font
     // ═══════════════════════════════════════════════════════
 
     private static (byte[], string, string) GeneratePdf(
@@ -67,6 +63,7 @@ public class ExportService : IExportService
         List<string> bibliography, ExportOptionsDto opts)
     {
         QuestPDF.Settings.License = LicenseType.Community;
+        var runningHead = GetRunningHead(paper.Title);
 
         var doc = QuestPDF.Fluent.Document.Create(container =>
         {
@@ -80,10 +77,23 @@ public class ExportService : IExportService
                     .FontSize(opts.FontSize)
                     .LineHeight(2f));
 
-                // APA 7 Student: page number top-right, no running head
-                page.Header().AlignRight().Text(text =>
+                // Header: Professional = running head left + page number right
+                //         Student = page number right only
+                page.Header().Row(row =>
                 {
-                    text.CurrentPageNumber().FontSize(opts.FontSize);
+                    if (!opts.IsStudentPaper)
+                    {
+                        row.RelativeItem().AlignLeft().Text(runningHead)
+                            .FontSize(opts.FontSize);
+                    }
+                    else
+                    {
+                        row.RelativeItem();
+                    }
+                    row.AutoItem().AlignRight().Text(text =>
+                    {
+                        text.CurrentPageNumber().FontSize(opts.FontSize);
+                    });
                 });
 
                 page.Content().Column(col =>
@@ -91,38 +101,52 @@ public class ExportService : IExportService
                     // ═══ TITLE PAGE ═══
                     if (opts.IncludeTitlePage)
                     {
-                        // APA 7: Title 3-4 lines from top, centered, bold, title case
                         col.Item().PaddingTop(120).AlignCenter().Column(tp =>
                         {
+                            // Title: centered, bold
                             tp.Item().AlignCenter().Text(paper.Title)
                                 .FontSize(opts.FontSize).Bold()
                                 .FontFamily(opts.FontFamily);
 
-                            // One blank double-spaced line, then author name
                             tp.Item().PaddingTop(24).AlignCenter().Text(
-                                paper.AuthorName ?? "Student Name")
+                                paper.AuthorName ?? "Author Name")
                                 .FontSize(opts.FontSize);
 
-                            // Department/Institution immediately after
                             if (!string.IsNullOrEmpty(paper.Institution))
                                 tp.Item().AlignCenter().Text(paper.Institution)
                                     .FontSize(opts.FontSize);
 
-                            // Course number and name
-                            if (!string.IsNullOrEmpty(paper.CourseName))
-                                tp.Item().AlignCenter().Text(paper.CourseName)
+                            if (opts.IsStudentPaper)
+                            {
+                                // Student: course, instructor, due date
+                                if (!string.IsNullOrEmpty(paper.CourseName))
+                                    tp.Item().AlignCenter().Text(paper.CourseName)
+                                        .FontSize(opts.FontSize);
+
+                                if (!string.IsNullOrEmpty(paper.InstructorName))
+                                    tp.Item().AlignCenter().Text(paper.InstructorName)
+                                        .FontSize(opts.FontSize);
+
+                                tp.Item().AlignCenter().Text(
+                                    paper.Deadline?.ToString("MMMM d, yyyy")
+                                    ?? DateTime.Now.ToString("MMMM d, yyyy"))
+                                    .FontSize(opts.FontSize);
+                            }
+                            else
+                            {
+                                // Professional: Author Note section
+                                tp.Item().PaddingTop(48).AlignCenter()
+                                    .Text("Author Note").FontSize(opts.FontSize).Bold();
+
+                                tp.Item().PaddingTop(4).PaddingLeft(36)
+                                    .Text($"{paper.AuthorName ?? "Author"}, {paper.Institution ?? "Institution"}.")
                                     .FontSize(opts.FontSize);
 
-                            // Instructor name
-                            if (!string.IsNullOrEmpty(paper.InstructorName))
-                                tp.Item().AlignCenter().Text(paper.InstructorName)
+                                tp.Item().PaddingTop(4).PaddingLeft(36)
+                                    .Text("Correspondence concerning this paper should be addressed to "
+                                        + $"{paper.AuthorName ?? "the author"}.")
                                     .FontSize(opts.FontSize);
-
-                            // Due date
-                            tp.Item().AlignCenter().Text(
-                                paper.Deadline?.ToString("MMMM d, yyyy")
-                                ?? DateTime.Now.ToString("MMMM d, yyyy"))
-                                .FontSize(opts.FontSize);
+                            }
                         });
                         col.Item().PageBreak();
                     }
@@ -135,34 +159,25 @@ public class ExportService : IExportService
                     var isFirstSection = true;
                     foreach (var section in sections)
                     {
-                        var text = section.PlainText
-                            ?? ExtractPlainText(section.Content)
-                            ?? "[No content]";
+                        var text = GetSectionText(section);
 
-                        // Determine heading level based on position/convention
-                        // First section's content appears right after the bold title (no heading)
-                        // Subsequent sections get Level 1 headings (centered, bold)
                         if (isFirstSection)
                         {
-                            // First section: text starts as new paragraph after title
-                            col.Item().PaddingTop(4).Text(
-                                GetSectionText(section)).FontSize(opts.FontSize);
+                            AddPdfParagraphs(col, text, opts);
                             isFirstSection = false;
                         }
                         else
                         {
-                            // Level 1 heading: centered, bold, title case
+                            // Level 1 heading: centered, bold
                             col.Item().PaddingTop(4).AlignCenter()
                                 .Text(section.Title)
                                 .FontSize(opts.FontSize).Bold();
 
-                            col.Item().PaddingTop(4).Text(
-                                GetSectionText(section)).FontSize(opts.FontSize);
+                            AddPdfParagraphs(col, text, opts);
                         }
                     }
 
                     // ═══ REFERENCES ═══
-                    // APA 7: New page, "References" centered+bold, entries with hanging indent
                     if (bibliography.Count > 0)
                     {
                         col.Item().PageBreak();
@@ -173,14 +188,11 @@ public class ExportService : IExportService
 
                         foreach (var entry in bibliography)
                         {
-                            // Hanging indent: subsequent lines indented 0.5"
                             col.Item().PaddingTop(4).PaddingLeft(36)
                                 .Text(entry).FontSize(opts.FontSize);
                         }
                     }
                 });
-
-                // No footer needed - page numbers are in header
             });
         });
 
@@ -196,8 +208,26 @@ public class ExportService : IExportService
             ?? "[No content]";
     }
 
+    /// <summary>
+    /// Splits text into paragraphs and adds them to the PDF column with proper APA 7 formatting.
+    /// </summary>
+    private static void AddPdfParagraphs(
+        QuestPDF.Fluent.ColumnDescriptor col, string text, ExportOptionsDto opts)
+    {
+        var paragraphs = text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var para in paragraphs)
+        {
+            var trimmed = para.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed)) continue;
+
+            // APA 7: first-line indent of 0.5 inch (36 pt)
+            col.Item().PaddingTop(2).PaddingLeft(36)
+                .Text(trimmed).FontSize(opts.FontSize);
+        }
+    }
+
     // ═══════════════════════════════════════════════════════
-    // DOCX EXPORT - APA 7 Student Paper Format
+    // DOCX EXPORT - APA 7 (Student & Professional)
     // ═══════════════════════════════════════════════════════
 
     private static (byte[], string, string) GenerateDocx(
@@ -224,70 +254,77 @@ public class ExportService : IExportService
                     Left = 1440, Right = 1440,
                     Header = 720, Footer = 720
                 },
-                new DocumentFormat.OpenXml.Wordprocessing.PageSize { Width = 12240, Height = 15840 } // Letter size
+                new DocumentFormat.OpenXml.Wordprocessing.PageSize { Width = 12240, Height = 15840 }
             );
 
-            // Add page numbers top-right (APA 7 student: no running head)
-            AddPageNumbers(mainPart);
+            // Header: Professional includes running head, Student has page numbers only
+            if (opts.IsStudentPaper)
+            {
+                AddPageNumbers(mainPart);
+            }
+            else
+            {
+                AddRunningHeadWithPageNumbers(mainPart, GetRunningHead(paper.Title), fontName, fontSize);
+            }
 
             // ═══ TITLE PAGE ═══
             if (opts.IncludeTitlePage)
             {
-                // 3-4 blank lines before title
                 for (var i = 0; i < 3; i++)
                     AddEmptyParagraph(body, fontName, fontSize, lineSpacing);
 
-                // Title: centered, bold
                 AddCenteredParagraph(body, paper.Title, fontName, fontSize, true, lineSpacing);
-
-                // Blank line
                 AddEmptyParagraph(body, fontName, fontSize, lineSpacing);
+                AddCenteredParagraph(body, paper.AuthorName ?? "Author Name", fontName, fontSize, false, lineSpacing);
 
-                // Author name: centered
-                AddCenteredParagraph(body, paper.AuthorName ?? "Student Name", fontName, fontSize, false, lineSpacing);
-
-                // Department/Institution: centered, immediately after
                 if (!string.IsNullOrEmpty(paper.Institution))
                     AddCenteredParagraph(body, paper.Institution, fontName, fontSize, false, lineSpacing);
 
-                // Course: centered
-                if (!string.IsNullOrEmpty(paper.CourseName))
-                    AddCenteredParagraph(body, paper.CourseName, fontName, fontSize, false, lineSpacing);
+                if (opts.IsStudentPaper)
+                {
+                    // Student: course, instructor, due date
+                    if (!string.IsNullOrEmpty(paper.CourseName))
+                        AddCenteredParagraph(body, paper.CourseName, fontName, fontSize, false, lineSpacing);
+                    if (!string.IsNullOrEmpty(paper.InstructorName))
+                        AddCenteredParagraph(body, paper.InstructorName, fontName, fontSize, false, lineSpacing);
 
-                // Instructor: centered
-                if (!string.IsNullOrEmpty(paper.InstructorName))
-                    AddCenteredParagraph(body, paper.InstructorName, fontName, fontSize, false, lineSpacing);
+                    var dateStr = paper.Deadline?.ToString("MMMM d, yyyy")
+                        ?? DateTime.Now.ToString("MMMM d, yyyy");
+                    AddCenteredParagraph(body, dateStr, fontName, fontSize, false, lineSpacing);
+                }
+                else
+                {
+                    // Professional: Author Note
+                    AddEmptyParagraph(body, fontName, fontSize, lineSpacing);
+                    AddEmptyParagraph(body, fontName, fontSize, lineSpacing);
+                    AddCenteredParagraph(body, "Author Note", fontName, fontSize, true, lineSpacing);
 
-                // Due date: centered
-                var dateStr = paper.Deadline?.ToString("MMMM d, yyyy")
-                    ?? DateTime.Now.ToString("MMMM d, yyyy");
-                AddCenteredParagraph(body, dateStr, fontName, fontSize, false, lineSpacing);
+                    var noteText = $"{paper.AuthorName ?? "Author"}, {paper.Institution ?? "Institution"}.";
+                    AddBodyParagraphs(body, noteText, fontName, fontSize, lineSpacing);
 
-                // Page break
+                    var corrText = $"Correspondence concerning this paper should be addressed to {paper.AuthorName ?? "the author"}.";
+                    AddBodyParagraphs(body, corrText, fontName, fontSize, lineSpacing);
+                }
+
                 body.AppendChild(new Paragraph(
                     new Run(new Break { Type = BreakValues.Page })));
             }
 
             // ═══ BODY ═══
-            // APA 7: Paper title repeated bold+centered above first body paragraph
             AddCenteredParagraph(body, paper.Title, fontName, fontSize, true, lineSpacing);
 
             var isFirstSection = true;
             foreach (var section in sections)
             {
-                var text = section.PlainText
-                    ?? ExtractPlainText(section.Content)
-                    ?? "[No content]";
+                var text = GetSectionText(section);
 
                 if (isFirstSection)
                 {
-                    // First section: body text starts directly (no "Introduction" heading)
                     AddBodyParagraphs(body, text, fontName, fontSize, lineSpacing);
                     isFirstSection = false;
                 }
                 else
                 {
-                    // Level 1 heading: centered, bold
                     AddCenteredParagraph(body, section.Title, fontName, fontSize, true, lineSpacing);
                     AddBodyParagraphs(body, text, fontName, fontSize, lineSpacing);
                 }
@@ -305,7 +342,6 @@ public class ExportService : IExportService
 
                 foreach (var entry in bibliography)
                 {
-                    // Hanging indent: Left=720 (0.5"), Hanging=720
                     var para = new Paragraph(
                         new ParagraphProperties(
                             new Indentation { Hanging = "720", Left = "720" },
@@ -331,6 +367,65 @@ public class ExportService : IExportService
     // ═══════════════════════════════════════════════════════
     // DOCX HELPERS
     // ═══════════════════════════════════════════════════════
+
+    /// <summary>
+    /// APA 7 Professional: Running head is a shortened title (max 50 chars), ALL CAPS.
+    /// </summary>
+    private static string GetRunningHead(string title)
+    {
+        var shortened = title.Length > 50 ? title[..50].Trim() : title;
+        return shortened.ToUpperInvariant();
+    }
+
+    /// <summary>
+    /// APA 7 Professional DOCX header: running head left-aligned + page number right-aligned.
+    /// </summary>
+    private static void AddRunningHeadWithPageNumbers(
+        MainDocumentPart mainPart, string runningHead, string fontName, string fontSize)
+    {
+        var headerPart = mainPart.AddNewPart<HeaderPart>();
+        var headerId = mainPart.GetIdOfPart(headerPart);
+
+        // Create a tab stop for right-aligned page number
+        headerPart.Header = new Header(
+            new Paragraph(
+                new ParagraphProperties(
+                    new Tabs(new TabStop { Val = TabStopValues.Right, Position = 9360 })),
+                // Running head text
+                new Run(
+                    new RunProperties(
+                        new RunFonts { Ascii = fontName, HighAnsi = fontName },
+                        new FontSize { Val = fontSize }),
+                    new Text(runningHead) { Space = SpaceProcessingModeValues.Preserve }),
+                // Tab to right
+                new Run(new TabChar()),
+                // Page number
+                new Run(
+                    new RunProperties(new FontSize { Val = fontSize }),
+                    new FieldChar { FieldCharType = FieldCharValues.Begin }),
+                new Run(
+                    new RunProperties(new FontSize { Val = fontSize }),
+                    new FieldCode(" PAGE ") { Space = SpaceProcessingModeValues.Preserve }),
+                new Run(
+                    new RunProperties(new FontSize { Val = fontSize }),
+                    new FieldChar { FieldCharType = FieldCharValues.End })));
+
+        headerPart.Header.Save();
+
+        var body = mainPart.Document?.Body;
+        if (body is null) return;
+        var existingSp = body.Elements<SectionProperties>().FirstOrDefault();
+        if (existingSp is null)
+        {
+            existingSp = new SectionProperties();
+            body.AppendChild(existingSp);
+        }
+        existingSp.PrependChild(new HeaderReference
+        {
+            Type = HeaderFooterValues.Default,
+            Id = headerId
+        });
+    }
 
     private static void AddPageNumbers(MainDocumentPart mainPart)
     {

@@ -45,8 +45,8 @@
         "IsRequired": true
       },
       {
-        "Name": "reference",
-        "Type": "PaperForge.DAL.Entities.Reference",
+        "Name": "dto",
+        "Type": "PaperForge.BLL.DTOs.AddReferenceDto",
         "IsRequired": true
       }
     ],

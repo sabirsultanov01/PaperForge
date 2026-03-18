@@ -119,10 +119,61 @@
     background: #f0f0f0;
 }
 
-/* ═══ Word count colors ═══ */
-.word-count.met {
-    color: #198754;
+/* ═══ Word count ═══ */
+.word-count {
+    color: #6c757d;
+    font-size: 0.8rem;
 }
-.word-count.over {
-    color: #0d6efd;
+
+/* ═══ Code blocks ═══ */
+#quillEditor .ql-editor pre.ql-syntax {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    margin: 8px 0;
+}
+
+/* ═══ Math formulas (KaTeX) ═══ */
+#quillEditor .ql-editor .ql-formula {
+    font-size: 1.1em;
+    vertical-align: middle;
+    margin: 0 2px;
+}
+
+/* ═══ Embedded images ═══ */
+#quillEditor .ql-editor img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin: 8px 0;
+    display: block;
+}
+
+/* ═══ Toolbar improvements ═══ */
+.ql-toolbar.ql-snow {
+    border-left: none;
+    border-right: none;
+    background: #fafafa;
+    flex-wrap: wrap;
+    padding: 4px 8px;
+}
+.ql-toolbar.ql-snow .ql-formats {
+    margin-right: 8px;
+    margin-bottom: 2px;
+}
+
+/* ═══ Quill snow formula tooltip ═══ */
+.ql-snow .ql-tooltip[data-mode="formula"] {
+    z-index: 10;
+}
+.ql-snow .ql-tooltip[data-mode="formula"]::before {
+    content: "LaTeX equation:";
+}
+.ql-snow .ql-tooltip input[type="text"] {
+    width: 300px;
 }

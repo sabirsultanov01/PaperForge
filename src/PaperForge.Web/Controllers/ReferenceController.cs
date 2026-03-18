@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PaperForge.BLL.DTOs;
 using PaperForge.BLL.Services.Interfaces;
 using PaperForge.DAL.Entities;
 using PaperForge.DAL.Enums;
@@ -31,10 +32,26 @@ public class ReferenceController : ControllerBase
     }
 
     [HttpPost("{paperId}")]
-    public async Task<IActionResult> Add(Guid paperId, [FromBody] Reference reference)
+    public async Task<IActionResult> Add(Guid paperId, [FromBody] AddReferenceDto dto)
     {
-        if (string.IsNullOrWhiteSpace(reference.AuthorLastName) && string.IsNullOrWhiteSpace(reference.Title))
+        if (string.IsNullOrWhiteSpace(dto.AuthorLastName) && string.IsNullOrWhiteSpace(dto.Title))
             return BadRequest(new { error = "Author last name or title is required." });
+
+        var reference = new Reference
+        {
+            ReferenceType = dto.ReferenceType,
+            AuthorLastName = dto.AuthorLastName ?? "",
+            AuthorFirstName = dto.AuthorFirstName ?? "",
+            Year = dto.Year,
+            Title = dto.Title ?? "",
+            Publisher = dto.Publisher,
+            Journal = dto.Journal,
+            Volume = dto.Volume,
+            Issue = dto.Issue,
+            Pages = dto.Pages,
+            DOI = dto.DOI,
+            URL = dto.URL,
+        };
 
         var added = await _refService.AddReferenceAsync(paperId, reference);
         return Ok(added);

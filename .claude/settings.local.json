@@ -47,7 +47,20 @@
       "Bash(python -m pip install pdfplumber -q)",
       "Bash(where python3:*)",
       "Bash(where py:*)",
-      "Bash(python3 -m pip install pdfplumber -q)"
+      "Bash(python3 -m pip install pdfplumber -q)",
+      "WebFetch(domain:www.purdueglobal.edu)",
+      "Bash(dotnet tool:*)",
+      "Bash(dotnet script:*)",
+      "Bash(dotnet run:*)",
+      "Bash(taskkill //F //IM \"PaperForge.Web.exe\")",
+      "Bash(curl -s http://localhost:5050/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5050/)",
+      "Bash(curl -s -L http://localhost:5050/)",
+      "Bash(curl -s -X POST http://localhost:5050/Import/Upload -F \"file=@C:/Users/Sabir/Downloads/10 - Shiraliyeva_Kimya.pdf\" -F \"paperTitle=Test Import\" -F \"paperType=0\" -F \"citationStyle=0\" -L -o /dev/null -w \"%{http_code}\\\\n%{url_effective}\")",
+      "Bash(curl -s -X POST http://localhost:5050/Import/Upload -F \"file=@C:/Users/Sabir/Downloads/10 - Shiraliyeva_Kimya.pdf\" -F \"paperTitle=Test Import\" -F \"paperType=0\" -F \"citationStyle=0\" -v)",
+      "Bash(taskkill /F /IM \"PaperForge.Web.exe\")",
+      "Bash(taskkill //F //IM \"dotnet.exe\")",
+      "Bash(taskkill //F //PID 20900)"
     ]
   }
 }

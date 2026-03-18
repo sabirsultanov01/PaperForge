@@ -1,29 +1,52 @@
 (function () {
     'use strict';
 
-    const { paperId, citationStyle } = window.PaperForge;
+    const { paperId, citationStyle, sectionData } = window.PaperForge;
     let currentSectionId = null;
     let saveTimer = null;
     let isDirty = false;
+
+    // In-memory content cache (keyed by sectionId)
+    const contentCache = {};
+    if (sectionData) {
+        for (const [id, data] of Object.entries(sectionData)) {
+            contentCache[id] = data.content || '';
+        }
+    }
+    console.log('[PaperForge] contentCache keys:', Object.keys(contentCache));
+    console.log('[PaperForge] first content preview:', Object.values(contentCache)[0]?.substring(0, 200));
 
     // ═══════════════════════════════════
     // QUILL EDITOR
     // ═══════════════════════════════════
 
+    // Build modules config — syntax and formula are optional
+    const modules = {
+        toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            [{ font: [] }],
+            [{ size: ['small', false, 'large', 'huge'] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ script: 'sub' }, { script: 'super' }],
+            [{ color: [] }, { background: [] }],
+            [{ align: [] }],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            [{ indent: '-1' }, { indent: '+1' }],
+            ['blockquote', 'code-block'],
+            ['link', 'image'],
+            ['clean'],
+        ],
+    };
+
+    // Only add optional modules if their dependencies loaded
+    if (window.hljs) modules.syntax = { hljs: window.hljs };
+
     const quill = new Quill('#quillEditor', {
         theme: 'snow',
-        modules: {
-            toolbar: [
-                [{ header: [2, 3, false] }],
-                ['bold', 'italic', 'underline', 'strike'],
-                [{ list: 'ordered' }, { list: 'bullet' }],
-                ['blockquote'],
-                ['link'],
-                ['clean'],
-            ],
-        },
+        modules,
         placeholder: 'Start writing...',
     });
+    console.log('[PaperForge] Quill initialized');
 
     // ═══════════════════════════════════
     // SECTION SWITCHING
@@ -34,6 +57,8 @@
     const guidanceText = document.getElementById('guidanceText');
 
     function selectSection(sectionId) {
+        console.log('[PaperForge] selectSection called:', sectionId);
+
         // Save current section first
         if (currentSectionId && isDirty) {
             saveSection(currentSectionId);
@@ -46,31 +71,37 @@
             item.classList.toggle('active', item.dataset.sectionId === sectionId);
         });
 
-        // Load content
-        const textarea = document.querySelector(`.section-content[data-section-id="${sectionId}"]`);
-        const guidance = document.querySelector(`.section-guidance[data-section-id="${sectionId}"]`);
-        const activeItem = document.querySelector(`.section-item[data-section-id="${sectionId}"]`);
+        // Load content from cache
+        const content = contentCache[sectionId] || '';
+        console.log('[PaperForge] content for section:', content ? `${content.length} chars, starts: ${content.substring(0, 100)}` : '(empty)');
 
-        if (textarea) {
-            const content = textarea.value;
-            if (content) {
-                try {
-                    const delta = JSON.parse(content);
-                    quill.setContents(delta);
-                } catch {
-                    quill.setText(content);
-                }
-            } else {
-                quill.setText('');
+        if (content) {
+            try {
+                const delta = JSON.parse(content);
+                console.log('[PaperForge] parsed delta ops:', delta?.ops?.length, 'ops');
+                quill.setContents(delta);
+                console.log('[PaperForge] setContents done, editor text length:', quill.getText().length);
+            } catch (err) {
+                console.error('[PaperForge] JSON.parse failed:', err.message);
+                quill.setText(content);
             }
+        } else {
+            console.warn('[PaperForge] No content in cache for section', sectionId);
+            quill.setText('');
         }
 
+        // Update title
+        const activeItem = document.querySelector(`.section-item[data-section-id="${sectionId}"]`);
         if (activeItem) {
             sectionTitle.textContent = activeItem.querySelector('.section-title').textContent;
         }
 
-        if (guidance) {
-            guidanceText.textContent = guidance.value || 'No guidance for this section.';
+        // Update guidance
+        const data = sectionData?.[sectionId];
+        if (data && data.guidance) {
+            guidanceText.textContent = data.guidance;
+        } else {
+            guidanceText.textContent = 'No guidance for this section.';
         }
 
         isDirty = false;
@@ -110,9 +141,8 @@
         const delta = JSON.stringify(quill.getContents());
         const plainText = quill.getText().trim();
 
-        // Store locally
-        const textarea = document.querySelector(`.section-content[data-section-id="${sectionId}"]`);
-        if (textarea) textarea.value = delta;
+        // Store in local cache
+        contentCache[sectionId] = delta;
 
         statusEl.innerHTML = '<i class="bi bi-arrow-repeat text-info"></i> Saving...';
 
@@ -143,8 +173,7 @@
                     const sectionId = currentSectionId;
                     const delta = JSON.stringify(quill.getContents());
                     const plainText = quill.getText().trim();
-                    const textarea = document.querySelector(`.section-content[data-section-id="${sectionId}"]`);
-                    if (textarea) textarea.value = delta;
+                    contentCache[sectionId] = delta;
 
                     fetch(`/api/Section/${sectionId}`, {
                         method: 'PUT',
@@ -170,7 +199,7 @@
         const item = document.querySelector(`.section-item[data-section-id="${currentSectionId}"]`);
         if (!item) return;
         const wcEl = item.querySelector('.word-count');
-        wcEl.textContent = `${count} words`;
+        wcEl.textContent = `${count} word${count !== 1 ? 's' : ''}`;
     }
 
     function updateSectionStatus(sectionId, plainText) {
@@ -202,18 +231,27 @@
     // EXPORT
     // ═══════════════════════════════════
 
-    document.getElementById('btnExportPdf')?.addEventListener('click', e => {
-        e.preventDefault();
+    function exportPaper(format, studentPaper) {
         window.AutoSave.forceSave().then(() => {
-            window.location.href = `/api/Export/download/${paperId}?format=0`;
+            window.location.href = `/api/Export/download/${paperId}?format=${format}&studentPaper=${studentPaper}`;
         });
-    });
+    }
 
-    document.getElementById('btnExportDocx')?.addEventListener('click', e => {
+    document.getElementById('btnExportPdfStudent')?.addEventListener('click', e => {
         e.preventDefault();
-        window.AutoSave.forceSave().then(() => {
-            window.location.href = `/api/Export/download/${paperId}?format=1`;
-        });
+        exportPaper(0, true);
+    });
+    document.getElementById('btnExportDocxStudent')?.addEventListener('click', e => {
+        e.preventDefault();
+        exportPaper(1, true);
+    });
+    document.getElementById('btnExportPdfPro')?.addEventListener('click', e => {
+        e.preventDefault();
+        exportPaper(0, false);
+    });
+    document.getElementById('btnExportDocxPro')?.addEventListener('click', e => {
+        e.preventDefault();
+        exportPaper(1, false);
     });
 
     // ═══════════════════════════════════

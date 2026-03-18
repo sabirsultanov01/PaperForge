@@ -32,3 +32,4 @@ C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.BLL\obj\Debug\net10.0\Pape
 C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.BLL\obj\Debug\net10.0\refint\PaperForge.BLL.dll
 C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.BLL\obj\Debug\net10.0\PaperForge.BLL.pdb
 C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.BLL\obj\Debug\net10.0\ref\PaperForge.BLL.dll
+C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.BLL\obj\Debug\net10.0\PaperForge.BLL.sourcelink.json

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PaperForge.BLL")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d0232188b8e6492fc08d411dce24389e307e54ff")]
 [assembly: System.Reflection.AssemblyProductAttribute("PaperForge.BLL")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PaperForge.BLL")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

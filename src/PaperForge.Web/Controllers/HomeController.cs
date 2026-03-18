@@ -8,6 +8,8 @@ public class HomeController : Controller
 {
     public IActionResult Index() => RedirectToAction("Index", "Paper");
 
+    public IActionResult WritingGuide() => View();
+
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

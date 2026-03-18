@@ -11,7 +11,7 @@ public class ImportController : Controller
     public ImportController(IImportService importService)
         => _importService = importService;
 
-    [HttpPost("Upload"), ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Upload(
         IFormFile file,
         [FromForm] string title,

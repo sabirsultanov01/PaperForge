@@ -6,6 +6,8 @@
 
 @section Styles {
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github.min.css" />
     <link rel="stylesheet" href="~/css/workspace.css" asp-append-version="true" />
 }
 
@@ -31,7 +33,8 @@
                         }) badge-sm">@sec.Status</span>
                     </div>
                     <small class="text-muted word-count">
-                        0 words
+                        @{var wc = (sec.PlainText ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;}
+                        @wc word@(wc != 1 ? "s" : "")
                     </small>
                 </li>
             }
@@ -56,10 +59,17 @@
                         <i class="bi bi-download"></i> Export
                     </button>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" id="btnExportPdf">
-                            <i class="bi bi-file-earmark-pdf"></i> Export as PDF</a></li>
-                        <li><a class="dropdown-item" href="#" id="btnExportDocx">
-                            <i class="bi bi-file-earmark-word"></i> Export as DOCX</a></li>
+                        <li><h6 class="dropdown-header">APA 7 Student</h6></li>
+                        <li><a class="dropdown-item" href="#" id="btnExportPdfStudent">
+                            <i class="bi bi-file-earmark-pdf"></i> PDF (Student)</a></li>
+                        <li><a class="dropdown-item" href="#" id="btnExportDocxStudent">
+                            <i class="bi bi-file-earmark-word"></i> DOCX (Student)</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><h6 class="dropdown-header">APA 7 Professional</h6></li>
+                        <li><a class="dropdown-item" href="#" id="btnExportPdfPro">
+                            <i class="bi bi-file-earmark-pdf"></i> PDF (Professional)</a></li>
+                        <li><a class="dropdown-item" href="#" id="btnExportDocxPro">
+                            <i class="bi bi-file-earmark-word"></i> DOCX (Professional)</a></li>
                     </ul>
                 </div>
                 <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
@@ -86,13 +96,7 @@
         <!-- Quill Editor -->
         <div id="quillEditor"></div>
 
-        <!-- Hidden data for each section -->
-        @foreach (var sec in Model.Sections)
-        {
-            <textarea class="d-none section-content" data-section-id="@sec.Id">@(sec.Content ?? "")</textarea>
-            <input type="hidden" class="section-guidance" data-section-id="@sec.Id"
-                   value="@(sec.GuidanceText ?? "")" />
-        }
+        <!-- Section data is passed via JS object below -->
     </main>
 
     <!-- ═══ RIGHT SIDEBAR: References ═══ -->
@@ -162,10 +166,16 @@
     window.PaperForge = {
         paperId: '@Model.Paper.Id',
         citationStyle: @((int)Model.Paper.CitationStyle),
+        sectionData: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            Model.Sections.ToDictionary(
+                s => s.Id.ToString(),
+                s => new { content = s.Content ?? "", guidance = s.GuidanceText ?? "" })))
     };
 </script>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
     <script src="~/js/workspace.js" asp-append-version="true"></script>
 }

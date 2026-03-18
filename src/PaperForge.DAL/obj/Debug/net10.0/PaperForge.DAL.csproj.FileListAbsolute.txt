@@ -9,3 +9,4 @@ C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\obj\Debug\net10.0\Pape
 C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\obj\Debug\net10.0\refint\PaperForge.DAL.dll
 C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\obj\Debug\net10.0\PaperForge.DAL.pdb
 C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\obj\Debug\net10.0\ref\PaperForge.DAL.dll
+C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\obj\Debug\net10.0\PaperForge.DAL.sourcelink.json
