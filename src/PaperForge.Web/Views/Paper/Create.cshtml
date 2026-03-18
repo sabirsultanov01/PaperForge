@@ -1,0 +1,71 @@
+@model CreatePaperViewModel
+@{
+    ViewData["Title"] = "New Paper";
+}
+
+<div class="container" style="max-width: 700px;">
+    <h2 class="mb-4"><i class="bi bi-plus-circle"></i> Create New Paper</h2>
+
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label">Paper Title <span class="text-danger">*</span></label>
+            <input asp-for="Title" class="form-control" placeholder="Enter your paper title" required />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Subject" class="form-label">Subject / Topic</label>
+            <input asp-for="Subject" class="form-control" placeholder="e.g., Psychology, Computer Science" />
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="AuthorName" class="form-label">Author Name</label>
+                <input asp-for="AuthorName" class="form-control" placeholder="Your full name" />
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Institution" class="form-label">Department &amp; Institution</label>
+                <input asp-for="Institution" class="form-control" placeholder="Department of X, University Name" />
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="CourseName" class="form-label">Course Number &amp; Name</label>
+                <input asp-for="CourseName" class="form-control" placeholder="e.g., ENGL 101: First Year Writing" />
+            </div>
+            <div class="col-md-6">
+                <label asp-for="InstructorName" class="form-label">Instructor Name</label>
+                <input asp-for="InstructorName" class="form-control" placeholder="e.g., Dr. Richard Teeth" />
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label asp-for="PaperType" class="form-label">Paper Type</label>
+                <select asp-for="PaperType" class="form-select"
+                        asp-items="Html.GetEnumSelectList<PaperType>()">
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="CitationStyle" class="form-label">Citation Style</label>
+                <select asp-for="CitationStyle" class="form-select"
+                        asp-items="Html.GetEnumSelectList<CitationStyle>()">
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Deadline" class="form-label">Deadline</label>
+                <input asp-for="Deadline" type="date" class="form-control" />
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg"></i> Create Paper
+            </button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,128 @@
+.workspace-container {
+    display: flex;
+    height: calc(100vh - 76px);
+    overflow: hidden;
+}
+
+/* ═══ Sidebars ═══ */
+.sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+.sidebar-right {
+    border-right: none;
+    border-left: 1px solid #dee2e6;
+}
+.sidebar-header {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+/* ═══ Section list ═══ */
+.section-list {
+    margin: 0;
+    padding: 0;
+}
+.section-item {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.section-item:hover {
+    background: #e9ecef;
+}
+.section-item.active {
+    background: #d0e7ff;
+    border-left: 3px solid #0d6efd;
+}
+.section-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+.badge-sm {
+    font-size: 0.65rem;
+    padding: 2px 5px;
+}
+
+/* ═══ Editor main ═══ */
+.editor-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.editor-toolbar {
+    padding: 8px 16px;
+    border-bottom: 1px solid #dee2e6;
+    background: #fff;
+}
+
+/* ═══ Guidance ═══ */
+.guidance-panel {
+    padding: 10px 16px;
+    background: #fff8e1;
+    border-bottom: 1px solid #ffe082;
+    font-size: 0.85rem;
+    transition: max-height 0.3s;
+    overflow: hidden;
+}
+.guidance-panel.collapsed {
+    max-height: 0;
+    padding: 0 16px;
+    border: none;
+}
+
+/* ═══ Quill editor ═══ */
+#quillEditor {
+    flex: 1;
+    overflow-y: auto;
+    font-size: 1rem;
+}
+#quillEditor .ql-editor {
+    min-height: 100%;
+    padding: 24px 32px;
+    font-family: 'Georgia', serif;
+    font-size: 1.05rem;
+    line-height: 1.8;
+}
+.ql-toolbar.ql-snow {
+    border-left: none;
+    border-right: none;
+    background: #fafafa;
+}
+.ql-container.ql-snow {
+    border: none;
+}
+
+/* ═══ Reference list ═══ */
+.reference-list {
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+}
+.reference-item {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.85rem;
+}
+.reference-item:hover {
+    background: #f0f0f0;
+}
+
+/* ═══ Word count colors ═══ */
+.word-count.met {
+    color: #198754;
+}
+.word-count.over {
+    color: #0d6efd;
+}

@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PaperForge.BLL/PaperForge.BLL.csproj" />
+    <Project Path="src/PaperForge.DAL/PaperForge.DAL.csproj" />
+    <Project Path="src/PaperForge.Web/PaperForge.Web.csproj" />
+  </Folder>
+</Solution>

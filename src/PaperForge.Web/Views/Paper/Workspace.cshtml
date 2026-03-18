@@ -1,0 +1,171 @@
+@model WorkspaceViewModel
+@{
+    ViewData["Title"] = Model.Paper.Title;
+    Layout = "_Layout";
+}
+
+@section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/workspace.css" asp-append-version="true" />
+}
+
+<div class="workspace-container">
+    <!-- ═══ LEFT SIDEBAR: Sections ═══ -->
+    <aside class="sidebar" id="sectionSidebar">
+        <div class="sidebar-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-list-ol"></i> Sections</h6>
+        </div>
+        <ul class="section-list list-unstyled" id="sectionList">
+            @foreach (var sec in Model.Sections)
+            {
+                <li class="section-item @(sec.Id == Model.Sections.FirstOrDefault()?.Id ? "active" : "")"
+                    data-section-id="@sec.Id"
+                    data-order="@sec.OrderIndex">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="section-title">@sec.Title</span>
+                        <span class="badge bg-@(sec.Status switch {
+                            SectionStatus.NotStarted => "secondary",
+                            SectionStatus.InProgress => "warning",
+                            SectionStatus.Done => "success",
+                            _ => "secondary"
+                        }) badge-sm">@sec.Status</span>
+                    </div>
+                    <small class="text-muted word-count">
+                        0 words
+                    </small>
+                </li>
+            }
+        </ul>
+    </aside>
+
+    <!-- ═══ MAIN EDITOR ═══ -->
+    <main class="editor-main">
+        <!-- Toolbar -->
+        <div class="editor-toolbar d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <h5 class="mb-0" id="currentSectionTitle">
+                    @(Model.Sections.FirstOrDefault()?.Title ?? "No sections")
+                </h5>
+                <span class="badge bg-light text-dark" id="autoSaveStatus">
+                    <i class="bi bi-check-circle text-success"></i> Saved
+                </span>
+            </div>
+            <div class="d-flex gap-2">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-success dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-download"></i> Export
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" id="btnExportPdf">
+                            <i class="bi bi-file-earmark-pdf"></i> Export as PDF</a></li>
+                        <li><a class="dropdown-item" href="#" id="btnExportDocx">
+                            <i class="bi bi-file-earmark-word"></i> Export as DOCX</a></li>
+                    </ul>
+                </div>
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+
+        <!-- Guidance panel -->
+        <div class="guidance-panel" id="guidancePanel">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong><i class="bi bi-lightbulb"></i> Writing Guidance</strong>
+                    <p class="mb-0 mt-1" id="guidanceText">
+                        @(Model.Sections.FirstOrDefault()?.GuidanceText ?? "Select a section to see guidance.")
+                    </p>
+                </div>
+                <button class="btn btn-sm btn-link text-muted" id="toggleGuidance">
+                    <i class="bi bi-chevron-up"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Quill Editor -->
+        <div id="quillEditor"></div>
+
+        <!-- Hidden data for each section -->
+        @foreach (var sec in Model.Sections)
+        {
+            <textarea class="d-none section-content" data-section-id="@sec.Id">@(sec.Content ?? "")</textarea>
+            <input type="hidden" class="section-guidance" data-section-id="@sec.Id"
+                   value="@(sec.GuidanceText ?? "")" />
+        }
+    </main>
+
+    <!-- ═══ RIGHT SIDEBAR: References ═══ -->
+    <aside class="sidebar sidebar-right" id="referenceSidebar">
+        <div class="sidebar-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-bookmark"></i> References</h6>
+            <button class="btn btn-sm btn-outline-primary" id="btnAddRef">
+                <i class="bi bi-plus"></i>
+            </button>
+        </div>
+
+        <!-- DOI Lookup -->
+        <div class="p-2 border-bottom">
+            <div class="input-group input-group-sm">
+                <input type="text" class="form-control" id="doiInput" placeholder="Paste DOI to auto-fill..." />
+                <button class="btn btn-outline-secondary" id="btnDoiLookup">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Reference Form (hidden by default) -->
+        <div class="p-2 border-bottom d-none" id="refForm">
+            <select class="form-select form-select-sm mb-2" id="refType">
+                <option value="0">Book</option>
+                <option value="1">Journal Article</option>
+                <option value="2">Website</option>
+                <option value="3">Conference Paper</option>
+            </select>
+            <input class="form-control form-control-sm mb-1" id="refAuthorLast" placeholder="Author Last Name" />
+            <input class="form-control form-control-sm mb-1" id="refAuthorFirst" placeholder="Author First Name" />
+            <input class="form-control form-control-sm mb-1" id="refTitle" placeholder="Title" />
+            <input class="form-control form-control-sm mb-1" id="refYear" type="number" placeholder="Year" />
+            <input class="form-control form-control-sm mb-1" id="refPublisher" placeholder="Publisher" />
+            <input class="form-control form-control-sm mb-1" id="refJournal" placeholder="Journal" />
+            <input class="form-control form-control-sm mb-1" id="refVolume" placeholder="Volume" />
+            <input class="form-control form-control-sm mb-1" id="refIssue" placeholder="Issue" />
+            <input class="form-control form-control-sm mb-1" id="refPages" placeholder="Pages" />
+            <input class="form-control form-control-sm mb-1" id="refDoi" placeholder="DOI" />
+            <input class="form-control form-control-sm mb-1" id="refUrl" placeholder="URL" />
+            <div class="d-flex gap-1 mt-2">
+                <button class="btn btn-sm btn-primary flex-fill" id="btnSaveRef">Save</button>
+                <button class="btn btn-sm btn-outline-secondary" id="btnCancelRef">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Reference List -->
+        <ul class="list-unstyled reference-list" id="referenceList">
+            @foreach (var r in Model.References)
+            {
+                <li class="reference-item" data-ref-id="@r.Id">
+                    <div class="d-flex justify-content-between">
+                        <small class="fw-bold">@r.AuthorLastName, @r.AuthorFirstName</small>
+                        <button class="btn btn-sm btn-link text-danger p-0 btn-delete-ref">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted">@r.Title (@r.Year)</small>
+                </li>
+            }
+        </ul>
+    </aside>
+</div>
+
+<!-- Pass data to JS -->
+<script>
+    window.PaperForge = {
+        paperId: '@Model.Paper.Id',
+        citationStyle: @((int)Model.Paper.CitationStyle),
+    };
+</script>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+    <script src="~/js/workspace.js" asp-append-version="true"></script>
+}

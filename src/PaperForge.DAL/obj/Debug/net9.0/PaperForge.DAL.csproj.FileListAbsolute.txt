@@ -1,0 +1,11 @@
+C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\bin\Debug\net9.0\PaperForge.DAL.deps.json
+C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\bin\Debug\net9.0\PaperForge.DAL.dll
+C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\bin\Debug\net9.0\PaperForge.DAL.pdb
+C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\obj\Debug\net9.0\PaperForge.DAL.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\obj\Debug\net9.0\PaperForge.DAL.AssemblyInfoInputs.cache
+C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\obj\Debug\net9.0\PaperForge.DAL.AssemblyInfo.cs
+C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\obj\Debug\net9.0\PaperForge.DAL.csproj.CoreCompileInputs.cache
+C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\obj\Debug\net9.0\PaperForge.DAL.dll
+C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\obj\Debug\net9.0\refint\PaperForge.DAL.dll
+C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\obj\Debug\net9.0\PaperForge.DAL.pdb
+C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.DAL\obj\Debug\net9.0\ref\PaperForge.DAL.dll
