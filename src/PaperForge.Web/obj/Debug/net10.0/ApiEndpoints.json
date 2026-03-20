@@ -128,6 +128,43 @@
   },
   {
     "ContainingType": "PaperForge.Web.Controllers.SectionController",
+    "Method": "Rename",
+    "RelativePath": "api/Section/{id}/rename",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "PaperForge.Web.Controllers.RenameDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PaperForge.Web.Controllers.SectionController",
+    "Method": "Create",
+    "RelativePath": "api/Section/create",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "PaperForge.Web.Controllers.CreateSectionDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PaperForge.Web.Controllers.SectionController",
     "Method": "Reorder",
     "RelativePath": "api/Section/reorder",
     "HttpMethod": "POST",

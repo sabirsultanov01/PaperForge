@@ -49,16 +49,18 @@
     console.log('[PaperForge] Quill initialized');
 
     // ═══════════════════════════════════
-    // SECTION SWITCHING
+    // SECTION SWITCHING (event delegation)
     // ═══════════════════════════════════
 
-    const sectionItems = document.querySelectorAll('.section-item');
+    const sectionList = document.getElementById('sectionList');
     const sectionTitle = document.getElementById('currentSectionTitle');
     const guidanceText = document.getElementById('guidanceText');
 
-    function selectSection(sectionId) {
-        console.log('[PaperForge] selectSection called:', sectionId);
+    function getAllSectionItems() {
+        return sectionList.querySelectorAll('.section-item');
+    }
 
+    function selectSection(sectionId) {
         // Save current section first
         if (currentSectionId && isDirty) {
             saveSection(currentSectionId);
@@ -67,26 +69,20 @@
         currentSectionId = sectionId;
 
         // Update active class
-        sectionItems.forEach(item => {
+        getAllSectionItems().forEach(item => {
             item.classList.toggle('active', item.dataset.sectionId === sectionId);
         });
 
         // Load content from cache
         const content = contentCache[sectionId] || '';
-        console.log('[PaperForge] content for section:', content ? `${content.length} chars, starts: ${content.substring(0, 100)}` : '(empty)');
-
         if (content) {
             try {
                 const delta = JSON.parse(content);
-                console.log('[PaperForge] parsed delta ops:', delta?.ops?.length, 'ops');
                 quill.setContents(delta);
-                console.log('[PaperForge] setContents done, editor text length:', quill.getText().length);
-            } catch (err) {
-                console.error('[PaperForge] JSON.parse failed:', err.message);
+            } catch {
                 quill.setText(content);
             }
         } else {
-            console.warn('[PaperForge] No content in cache for section', sectionId);
             quill.setText('');
         }
 
@@ -108,14 +104,140 @@
         updateWordCount();
     }
 
-    sectionItems.forEach(item => {
-        item.addEventListener('click', () => selectSection(item.dataset.sectionId));
+    // Event delegation for section clicks
+    sectionList.addEventListener('click', e => {
+        // Ignore clicks on delete button
+        if (e.target.closest('.btn-delete-section')) return;
+        const item = e.target.closest('.section-item');
+        if (item) selectSection(item.dataset.sectionId);
     });
 
     // Select first section on load
-    if (sectionItems.length > 0) {
-        selectSection(sectionItems[0].dataset.sectionId);
-    }
+    const firstItem = sectionList.querySelector('.section-item');
+    if (firstItem) selectSection(firstItem.dataset.sectionId);
+
+    // ═══════════════════════════════════
+    // SECTION MANAGEMENT (add, rename, delete)
+    // ═══════════════════════════════════
+
+    // --- ADD SECTION ---
+    document.getElementById('btnAddSection')?.addEventListener('click', () => {
+        const title = prompt('Section name:');
+        if (!title?.trim()) return;
+
+        fetch('/api/Section/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paperId, title: title.trim() }),
+        })
+            .then(r => { if (!r.ok) throw new Error('Failed'); return r.json(); })
+            .then(sec => {
+                // Add to DOM
+                const li = document.createElement('li');
+                li.className = 'section-item';
+                li.dataset.sectionId = sec.id;
+                li.dataset.order = sec.orderIndex;
+                li.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="section-title" title="Double-click to rename">${esc(sec.title)}</span>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="badge bg-secondary badge-sm">NotStarted</span>
+                            <button class="btn btn-sm btn-link text-danger p-0 btn-delete-section" title="Delete section">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <small class="text-muted word-count">0 words</small>
+                `;
+                sectionList.appendChild(li);
+                contentCache[sec.id] = '';
+                selectSection(sec.id);
+            })
+            .catch(() => alert('Failed to add section.'));
+    });
+
+    // --- DELETE SECTION ---
+    sectionList.addEventListener('click', e => {
+        const btn = e.target.closest('.btn-delete-section');
+        if (!btn) return;
+        e.stopPropagation();
+
+        const item = btn.closest('.section-item');
+        const sectionId = item.dataset.sectionId;
+        const title = item.querySelector('.section-title').textContent;
+
+        if (!confirm(`Delete section "${title}"?`)) return;
+
+        fetch(`/api/Section/${sectionId}`, { method: 'DELETE' })
+            .then(r => {
+                if (!r.ok) throw new Error('Failed');
+                item.remove();
+                delete contentCache[sectionId];
+
+                // If we deleted the active section, select another
+                if (currentSectionId === sectionId) {
+                    const next = sectionList.querySelector('.section-item');
+                    if (next) {
+                        selectSection(next.dataset.sectionId);
+                    } else {
+                        currentSectionId = null;
+                        quill.setText('');
+                        sectionTitle.textContent = 'No sections';
+                    }
+                }
+            })
+            .catch(() => alert('Failed to delete section.'));
+    });
+
+    // --- RENAME SECTION (double-click) ---
+    sectionList.addEventListener('dblclick', e => {
+        const titleEl = e.target.closest('.section-title');
+        if (!titleEl) return;
+
+        const item = titleEl.closest('.section-item');
+        const sectionId = item.dataset.sectionId;
+        const oldTitle = titleEl.textContent.trim();
+
+        // Replace span with input
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = oldTitle;
+        input.className = 'form-control form-control-sm section-rename-input';
+        titleEl.replaceWith(input);
+        input.focus();
+        input.select();
+
+        function commitRename() {
+            const newTitle = input.value.trim() || oldTitle;
+            const span = document.createElement('span');
+            span.className = 'section-title';
+            span.title = 'Double-click to rename';
+            span.textContent = newTitle;
+            input.replaceWith(span);
+
+            if (newTitle !== oldTitle) {
+                fetch(`/api/Section/${sectionId}/rename`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: newTitle }),
+                }).catch(() => {
+                    span.textContent = oldTitle;
+                    alert('Failed to rename section.');
+                });
+
+                // Update editor header if this is the active section
+                if (currentSectionId === sectionId) {
+                    sectionTitle.textContent = newTitle;
+                }
+            }
+        }
+
+        input.addEventListener('blur', commitRename);
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+            if (e.key === 'Escape') { input.value = oldTitle; input.blur(); }
+        });
+    });
 
     // ═══════════════════════════════════
     // AUTO-SAVE (every 5s when dirty)

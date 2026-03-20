@@ -48,6 +48,21 @@
 .section-title {
     font-size: 0.9rem;
     font-weight: 500;
+    cursor: default;
+}
+.section-rename-input {
+    font-size: 0.85rem;
+    padding: 1px 4px;
+    max-width: 160px;
+}
+.btn-delete-section {
+    opacity: 0;
+    transition: opacity 0.15s;
+    font-size: 0.85rem;
+    line-height: 1;
+}
+.section-item:hover .btn-delete-section {
+    opacity: 1;
 }
 .badge-sm {
     font-size: 0.65rem;

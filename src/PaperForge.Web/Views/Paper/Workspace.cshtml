@@ -16,6 +16,9 @@
     <aside class="sidebar" id="sectionSidebar">
         <div class="sidebar-header d-flex justify-content-between align-items-center">
             <h6 class="mb-0"><i class="bi bi-list-ol"></i> Sections</h6>
+            <button class="btn btn-sm btn-outline-primary" id="btnAddSection" title="Add section">
+                <i class="bi bi-plus"></i>
+            </button>
         </div>
         <ul class="section-list list-unstyled" id="sectionList">
             @foreach (var sec in Model.Sections)
@@ -24,13 +27,18 @@
                     data-section-id="@sec.Id"
                     data-order="@sec.OrderIndex">
                     <div class="d-flex justify-content-between align-items-start">
-                        <span class="section-title">@sec.Title</span>
-                        <span class="badge bg-@(sec.Status switch {
-                            SectionStatus.NotStarted => "secondary",
-                            SectionStatus.InProgress => "warning",
-                            SectionStatus.Done => "success",
-                            _ => "secondary"
-                        }) badge-sm">@sec.Status</span>
+                        <span class="section-title" title="Double-click to rename">@sec.Title</span>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="badge bg-@(sec.Status switch {
+                                SectionStatus.NotStarted => "secondary",
+                                SectionStatus.InProgress => "warning",
+                                SectionStatus.Done => "success",
+                                _ => "secondary"
+                            }) badge-sm">@sec.Status</span>
+                            <button class="btn btn-sm btn-link text-danger p-0 btn-delete-section" title="Delete section">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
                     </div>
                     <small class="text-muted word-count">
                         @{var wc = (sec.PlainText ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;}

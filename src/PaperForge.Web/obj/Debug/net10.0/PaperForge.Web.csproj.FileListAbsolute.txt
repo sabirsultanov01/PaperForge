@@ -160,6 +160,6 @@ C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.Web\bin\Debug\net10.0\Ugly
 C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.Web\bin\Debug\net10.0\UglyToad.PdfPig.Tokenization.dll
 C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.Web\bin\Debug\net10.0\UglyToad.PdfPig.Tokens.dll
 C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.Web\obj\Debug\net10.0\PaperForge.Web.sourcelink.json
-C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.Web\obj\Debug\net10.0\compressed\ejbrbut3t3-{0}-hhkxjz5zbo-hhkxjz5zbo.gz
-C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.Web\obj\Debug\net10.0\compressed\79utihg95t-{0}-nif6ghngee-nif6ghngee.gz
+C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.Web\obj\Debug\net10.0\compressed\ejbrbut3t3-{0}-ci9luy2d7v-ci9luy2d7v.gz
+C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.Web\obj\Debug\net10.0\compressed\79utihg95t-{0}-wsw9e2o1p0-wsw9e2o1p0.gz
 C:\Users\Sabir\source\repos\PaperForge\src\PaperForge.Web\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
